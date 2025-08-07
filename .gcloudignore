@@ -1,0 +1,12 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.log
+test_local.py
+*.md
+*.sql
+*.sh

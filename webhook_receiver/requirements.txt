@@ -1,0 +1,11 @@
+# -----------------requirements.txt
+# Webhook Receiver
+
+functions-framework==3.4.0
+Flask==2.3.3
+pydantic==2.4.2
+supabase==2.0.0
+google-cloud-pubsub==2.18.4
+google-cloud-tasks==2.16.4
+python-dotenv==1.0.0
+requests==2.31.0

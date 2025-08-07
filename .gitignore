@@ -1,0 +1,10 @@
+.env
+.env.docker_run
+.venv/
+venv/
+__pycache__/
+credentials/
+qdrant_data/
+redis_data/
+*credential.json
+service-account.json
