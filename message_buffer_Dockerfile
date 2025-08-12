@@ -34,5 +34,5 @@ RUN test -f message_buffer_main.py || (echo "message_buffer_main.py não encontr
 # Expor porta
 EXPOSE 8080
 
-# Comando para executar a função (target e port hardcoded)
-CMD exec python -m functions_framework --target=message_buffer --port=8080 --host=0.0.0.0
+# Comando para executar a função (especificando o arquivo correto)
+CMD exec python -m functions_framework --target=message_buffer --port=8080 --host=0.0.0.0 --source=message_buffer_main.py
