@@ -17,20 +17,24 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copiar requirements primeiro (para cache)
-COPY requirements.txt .
+COPY requirements.txt requirements.txt
 
 # Instalar dependências Python
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copiar código da função
-COPY . .
+COPY message_buffer_*.py ./
+COPY models.py ./
+COPY supabase.py ./
+COPY message_processor.py ./
+COPY service-account.json ./
 
 # Verificar se arquivos importantes existem
 RUN ls -la /app && \
-    test -f main.py && \
+    test -f message_buffer_main.py && \
     test -f models.py && \
-    test -f supabase_manager.py
+    test -f supabase.py
 
 # Expor porta
 EXPOSE 8080

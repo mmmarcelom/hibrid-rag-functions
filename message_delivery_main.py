@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 from models import Message
 
-from supabase_manager import SupabaseManager
-from delivery import DeliveryProcessor
+from supabase import SupabaseManager
+from message_processor import DeliveryProcessor
 
 import time
 import random

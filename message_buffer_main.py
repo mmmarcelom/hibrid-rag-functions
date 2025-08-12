@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from models import Publication, Message, Conversation
 
-from supabase_manager import SupabaseManager
+from supabase import SupabaseManager
 
 from datetime import datetime
 import json

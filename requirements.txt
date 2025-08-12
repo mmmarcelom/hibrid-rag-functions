@@ -1,0 +1,28 @@
+# Requirements unificado para todas as Cloud Functions
+# Hibrid RAG Functions
+
+# Framework das Cloud Functions
+functions-framework==3.4.0
+
+# Web Framework
+Flask==2.3.3
+
+# Validação de dados
+pydantic==2.5.0
+
+# Banco de dados
+supabase==2.0.0
+
+# Google Cloud Services
+google-cloud-pubsub==2.18.4
+google-cloud-tasks==2.16.4
+
+# HTTP e requisições
+requests==2.31.0
+httpx==0.24.1
+
+# Cloud Events
+cloudevents==1.9.0
+
+# Configuração de ambiente
+python-dotenv==1.0.0

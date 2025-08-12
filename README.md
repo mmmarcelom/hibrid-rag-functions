@@ -323,26 +323,191 @@ jupyter notebook tests/teste.ipynb
 | **Pub/Sub erro** | Verificar credenciais Google Cloud |
 | **CRM API falha** | Verificar tokens e rate limits |
 
-### 📝 Estrutura do Projeto
+## 📁 Estrutura do Projeto
+
+### 🎯 Visão Geral
+
+O projeto foi reorganizado para ter uma estrutura mais simples e plana, com todas as Cloud Functions na raiz do projeto. Isso facilita o gerenciamento e deploy.
+
+### 📂 Estrutura de Arquivos
 
 ```
-hibrid-rag/
-├── 🌐 cloud_functions/          # Microserviços Google Cloud
-│   ├── webhook_receiver/        # Entrada de webhooks
-│   ├── message_buffer/          # Agrupamento de mensagens  
-│   └── message_delivery/        # Entrega aos CRMs
+hibrid-rag-functions/
+├── 🌐 Cloud Functions (na raiz)
+│   ├── message_receiver_main.py          # Função principal do message receiver
+│   ├── message_receiver_Dockerfile       # Container Docker
+│   │
+│   ├── message_buffer_main.py            # Função principal do buffer
+│   ├── message_buffer_Dockerfile         # Container Docker
+│   │
+│   ├── message_delivery_main.py          # Função principal de entrega
+│   └── message_delivery_Dockerfile       # Container Docker
 │
-├── 🧠 server/                   # Servidor RAG principal
-│   ├── core/                    # Configurações e schemas
-│   ├── messaging/               # Pub/Sub e processamento
-│   ├── rag/                     # Motor RAG (LLM + Vector DB)
-│   ├── health/                  # Health checks
-│   ├── scripts/                 # Utilitários e carregamento
-│   └── utils/                   # Processamento de texto
+├── 🔧 Módulos Compartilhados
+│   ├── models.py                         # Modelos de dados (compartilhado)
+│   ├── supabase.py                       # Gerenciador Supabase (compartilhado)
+│   └── message_processor.py              # Processador de webhooks e entrega (compartilhado)
 │
-├── 🧪 tests/                    # Testes e notebooks
-└── 📄 docs/                     # Documentação adicional
+├── 📦 Requirements
+│   └── requirements.txt                  # Dependências unificadas
+│
+├── 🔧 Scripts de Deploy
+│   ├── deploy_functions.bat              # Deploy para Windows
+│   └── deploy_functions.sh               # Deploy para Linux/Mac
+│
+├── 📄 Documentação
+│   ├── README.md                         # Documentação principal
+│   └── Multi Tenant TO-DO.md             # Roadmap multi-tenant
+│
+├── 🔐 Configuração
+│   ├── service-account.json              # Credenciais Google Cloud
+│   ├── .gitignore                        # Arquivos ignorados pelo Git
+│   └── .gcloudignore                     # Arquivos ignorados pelo Cloud Build
+│
+└── 📁 Outros
+    └── .setup/                           # Arquivos de setup
 ```
+
+### 🚀 Como Usar
+
+#### Deploy das Cloud Functions
+
+##### Windows:
+```bash
+deploy_functions.bat [PROJECT_ID]
+```
+
+##### Linux/Mac:
+```bash
+chmod +x deploy_functions.sh
+./deploy_functions.sh [PROJECT_ID]
+```
+
+#### Deploy Manual
+
+##### Message Receiver:
+```bash
+gcloud functions deploy message-receiver \
+    --runtime python311 \
+    --trigger-http \
+    --allow-unauthenticated \
+    --entry-point message_receiver \
+    --source . \
+    --project [PROJECT_ID]
+```
+
+##### Message Buffer:
+```bash
+gcloud functions deploy message-buffer \
+    --runtime python311 \
+    --trigger-http \
+    --entry-point message_buffer \
+    --source . \
+    --project [PROJECT_ID]
+```
+
+##### Message Delivery:
+```bash
+gcloud functions deploy message-delivery \
+    --runtime python311 \
+    --trigger-topic para-envio \
+    --entry-point message_delivery \
+    --source . \
+    --project [PROJECT_ID]
+```
+
+### 🔧 Desenvolvimento Local
+
+#### Testando Individualmente
+
+##### Message Receiver:
+```bash
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar localmente
+functions-framework --target=message_receiver --port=8080
+```
+
+##### Message Buffer:
+```bash
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar localmente
+functions-framework --target=message_buffer --port=8081
+```
+
+##### Message Delivery:
+```bash
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar localmente
+functions-framework --target=message_delivery --port=8082
+```
+
+#### Docker
+
+##### Message Receiver:
+```bash
+docker build -f message_receiver_Dockerfile -t message-receiver .
+docker run -p 8080:8080 message-receiver
+```
+
+##### Message Buffer:
+```bash
+docker build -f message_buffer_Dockerfile -t message-buffer .
+docker run -p 8081:8080 message-buffer
+```
+
+##### Message Delivery:
+```bash
+docker build -f message_delivery_Dockerfile -t message-delivery .
+docker run -p 8082:8080 message-delivery
+```
+
+### 📝 Convenções de Nomenclatura
+
+#### Arquivos Python
+- `[function]_main.py` - Função principal
+- `models.py` - Modelos Pydantic (compartilhado)
+- `supabase.py` - Gerenciador Supabase (compartilhado)
+- `message_processor.py` - Processador de webhooks e entrega (compartilhado)
+
+#### Arquivos de Configuração
+- `requirements.txt` - Dependências Python unificadas
+- `[function]_Dockerfile` - Container Docker
+
+#### Funções
+- `message_receiver` - Recebe mensagens
+- `message_buffer` - Processa buffer
+- `message_delivery` - Entrega mensagens
+
+### 🔄 Fluxo de Dados
+
+```
+1. CRM → message_receiver_main.py
+2. message_receiver → message_buffer_main.py (via Cloud Tasks)
+3. message_buffer → Pub/Sub → message_delivery_main.py
+4. message_delivery → CRM
+```
+
+### ✅ Vantagens da Nova Estrutura
+
+1. **Simplicidade**: Todos os arquivos na raiz
+2. **Facilidade de Deploy**: Scripts automatizados
+3. **Isolamento**: Cada função tem seus próprios arquivos
+4. **Manutenibilidade**: Estrutura clara e organizada
+5. **Escalabilidade**: Fácil adicionar novas funções
+
+### 🚨 Importante
+
+- **Módulos Compartilhados**: `models.py`, `supabase.py` e `message_processor.py` são compartilhados entre todas as funções
+- **Requirements Unificados**: Todas as funções usam o mesmo arquivo `requirements.txt` com todas as dependências
+- **Imports Atualizados**: Todos os imports apontam para os módulos compartilhados
+- **Dockerfiles Otimizados**: Copiam apenas os arquivos necessários para cada função
+- **Service Account**: O `service-account.json` é compartilhado entre todas as funções
 
 ## 🔒 Segurança
 

@@ -7,13 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 from models import Publication, Message, Conversation
 
-from supabase_manager import SupabaseManager
-from webhook import WebhookProcessor
+from supabase import SupabaseManager
+from message_processor import WebhookProcessor
 
 from google.cloud import tasks_v2
 
 @functions_framework.http
-def webhook_receiver(request):
+def message_receiver(request):
     """Função router que recebe webhooks de diferentes CRMs e padroniza as mensagens."""
     
     webhook = WebhookProcessor(request)
