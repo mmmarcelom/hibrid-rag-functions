@@ -65,7 +65,6 @@ steps:
 # Configurações de logs e opções
 options:
   logging: CLOUD_LOGGING_ONLY
-  defaultLogsBucket: gs://$PROJECT_ID-cloudbuild-logs
 
 # Substituições (serão configuradas no Cloud Build)
 substitutions:
