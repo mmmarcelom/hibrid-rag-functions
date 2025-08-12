@@ -1,4 +1,4 @@
-# Message Delivery - Cloud Function (Pub/Sub Trigger)
+# Message Delivery - Cloud Function
 FROM python:3.11-slim
 
 # Definir variáveis de ambiente
@@ -11,6 +11,7 @@ ENV PYTHONPATH=/app
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar diretório de trabalho
@@ -28,15 +29,12 @@ COPY message_delivery_*.py ./
 COPY models.py ./
 COPY supabase.py ./
 COPY message_processor.py ./
-COPY service-account.json ./
 
 # Verificar se message_delivery_main.py existe
 RUN test -f message_delivery_main.py || (echo "message_delivery_main.py não encontrado!" && exit 1)
 
-# Expor porta (necessário para Cloud Run)
+# Expor porta
 EXPOSE 8080
 
 # Comando para executar a função
-# Para Cloud Functions com gatilho Pub/Sub, usamos o mesmo comando
-# O Google Cloud detecta automaticamente se é HTTP ou Cloud Event
 CMD exec python -m functions_framework --target=$FUNCTION_TARGET --port=$PORT --host=0.0.0.0

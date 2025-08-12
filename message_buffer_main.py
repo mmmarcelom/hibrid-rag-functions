@@ -1,23 +1,17 @@
 import functions_framework
 from flask import request, jsonify
 import os
+import json
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 from models import Publication, Message, Conversation
 
 from supabase import SupabaseManager
 
-from datetime import datetime
-import json
-
-
 @functions_framework.http
 def message_buffer(request):
-    """Cloud Function que processa tasks agendadas e publica no Pub/Sub"""
-    
-    # Retorna sucesso para requisições OPTIONS
-    if request.method == 'OPTIONS':
-        return ('', 204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type'})
+    """Função que processa mensagens em buffer e publica no Pub/Sub."""
     
     # Retorna erro para métodos diferentes de POST
     if request.method != 'POST':
@@ -30,22 +24,27 @@ def message_buffer(request):
             return jsonify({"error": "Dados da task não fornecidos"}), 400
         
         identification = task_data.get("identification")
+        tenant_id = task_data.get("tenant_id")
         
         if not identification:
             return jsonify({"error": "identification é obrigatório"}), 400
         
-        print(f"🔄 Processando task para identificação: {identification}")
+        if not tenant_id:
+            return jsonify({"error": "tenant_id é obrigatório"}), 400
         
-        # Conectar ao Supabase
-        supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'))
+        print(f"🔄 Processando task para identificação: {identification} (tenant: {tenant_id})")
+        
+        # Conectar ao Supabase com tenant_id
+        supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'), tenant_id)
         
         # Processar conversa para publicação
         try:
             # Usar método encapsulado da SupabaseManager
-            conversation, buffer_messages, conversation_history = supabase.process_conversation_for_publication(identification)
+            conversation, buffer_messages, conversation_history = supabase.process_conversation_for_publication(identification, tenant_id)
             
             # Criar publication com nova estrutura
             publication = Publication(
+                tenant_id=tenant_id,
                 conversation=conversation, 
                 buffer_messages=buffer_messages,
                 conversation_history=conversation_history
@@ -70,28 +69,16 @@ def publish_message(publication: Publication):
     
     try:
         from google.cloud import pubsub_v1
-        from google.oauth2 import service_account
         
-        # Configurar credenciais
-        try:
-            # Primeiro tenta usar credenciais padrão (funciona nas cloud functions)
-            credentials = None
-            print("✅ Usando credenciais padrão do Google Cloud")
-        except Exception:
-            # Se falhar, tenta usar arquivo local (funciona localmente)
-            service_account_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'service-account.json')
-            if os.path.exists(service_account_path):
-                credentials = service_account.Credentials.from_service_account_file(service_account_path)
-                print(f"✅ Usando credenciais do arquivo: {service_account_path}")
-            else:
-                print("⚠️ Nenhuma credencial encontrada")
-                credentials = None
+        # Cloud Run gerencia credenciais automaticamente
+        publisher = pubsub_v1.PublisherClient()
+        print("✅ Publisher client inicializado com credenciais padrão do Cloud Run")
         
-        publisher = pubsub_v1.PublisherClient(credentials=credentials)
         topic_path = publisher.topic_path(os.getenv('GOOGLE_PROJECT_ID'), os.getenv('PUBSUB_TOPIC_TO_PROCESS'))
         
         # Preparar dados da publication
         publication_data = {
+            "tenant_id": publication.tenant_id,
             "conversation": publication.conversation.model_dump(),
             "buffer_messages": [msg.model_dump() for msg in publication.buffer_messages] if publication.buffer_messages else [],
             "conversation_history": [msg.model_dump() for msg in publication.conversation_history] if publication.conversation_history else [],
@@ -108,6 +95,7 @@ def publish_message(publication: Publication):
             "status": "success",
             "message": "Task processada e publicação enviada com sucesso",
             "publication_id": publication_data['publication_id'],
+            "tenant_id": publication.tenant_id,
             "conversation_id": publication.conversation.id,
             "buffer_messages_count": len(publication.buffer_messages) if publication.buffer_messages else 0,
             "conversation_history_count": len(publication.conversation_history) if publication.conversation_history else 0

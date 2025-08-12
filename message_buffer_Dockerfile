@@ -11,6 +11,7 @@ ENV PYTHONPATH=/app
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar diretório de trabalho
@@ -28,16 +29,12 @@ COPY message_buffer_*.py ./
 COPY models.py ./
 COPY supabase.py ./
 COPY message_processor.py ./
-COPY service-account.json ./
 
-# Verificar se arquivos importantes existem
-RUN ls -la /app && \
-    test -f message_buffer_main.py && \
-    test -f models.py && \
-    test -f supabase.py
+# Verificar se message_buffer_main.py existe
+RUN test -f message_buffer_main.py || (echo "message_buffer_main.py não encontrado!" && exit 1)
 
 # Expor porta
 EXPOSE 8080
 
-# Comando para executar a função (sem health check para debug inicial)
-CMD exec python -m functions_framework --target=$FUNCTION_TARGET --port=$PORT --host=0.0.0.0 --debug
+# Comando para executar a função
+CMD exec python -m functions_framework --target=$FUNCTION_TARGET --port=$PORT --host=0.0.0.0

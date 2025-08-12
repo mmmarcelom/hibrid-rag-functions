@@ -86,9 +86,9 @@ def schedule_processing_task(identification: str, tenant_id: str):
     """Agenda uma task para processamento com buffer de 6 segundos"""
     
     try:
-        # No Cloud Functions, usar as credenciais padrão do ambiente
+        # Cloud Run gerencia credenciais automaticamente
         client = tasks_v2.CloudTasksClient()
-        print("✅ Usando credenciais padrão do Google Cloud")
+        print("✅ Cloud Tasks client inicializado com credenciais padrão do Cloud Run")
         
     except Exception as e:
         print(f"❌ Erro ao inicializar Cloud Tasks client: {str(e)}")

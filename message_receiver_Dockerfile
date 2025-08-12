@@ -29,7 +29,6 @@ COPY message_receiver_*.py ./
 COPY models.py ./
 COPY supabase.py ./
 COPY message_processor.py ./
-COPY service-account.json ./
 
 # Verificar se message_receiver_main.py existe
 RUN test -f message_receiver_main.py || (echo "message_receiver_main.py não encontrado!" && exit 1)
