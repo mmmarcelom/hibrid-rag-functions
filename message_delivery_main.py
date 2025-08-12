@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from models import Publication, Message, Conversation
 
-from supabase import SupabaseManager
+from supabase_manager import SupabaseManager
 from message_processor import DeliveryProcessor
 
 @functions_framework.http

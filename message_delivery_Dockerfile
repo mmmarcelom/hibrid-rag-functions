@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copiar código da função
 COPY message_delivery_*.py ./
 COPY models.py ./
-COPY supabase.py ./
+COPY supabase_manager.py ./
 COPY message_processor.py ./
 
 # Verificar se message_delivery_main.py existe
