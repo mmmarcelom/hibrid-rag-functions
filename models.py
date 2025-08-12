@@ -7,6 +7,7 @@ from supabase import create_client, Client
 class Message(BaseModel):
     """Mensagem padronizada para todos os webhooks e sistemas."""
     id: str
+    tenant_id: str  # OBRIGATÓRIO - ID do tenant
     conversation_id: Optional[str] = None  # Será definido pelo message_buffer
     platform: str
     sender: str
@@ -25,6 +26,7 @@ class Message(BaseModel):
 class Conversation(BaseModel):
     """Estrutura para conversas no Supabase."""
     id: str
+    tenant_id: str  # OBRIGATÓRIO - ID do tenant
     identification: str
     platform: Literal['wts', 'kommo', 'rd_conversas']
     created_at: str
@@ -36,6 +38,7 @@ class Conversation(BaseModel):
 
 class Publication(BaseModel):
     """Estrutura para publicação no Pub/Sub com mensagem e contexto."""
+    tenant_id: str  # OBRIGATÓRIO - ID do tenant
     conversation: Conversation
     buffer_messages: Optional[List[Message]] = None  # Mensagens recebidas agrupadas pelo buffer
     conversation_history: Optional[List[Message]] = None  # Histórico completo da conversa (inclui respostas anteriores)

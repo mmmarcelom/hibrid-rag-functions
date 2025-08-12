@@ -12,9 +12,40 @@ from message_processor import WebhookProcessor
 
 from google.cloud import tasks_v2
 
+def get_tenant_id_from_request(request) -> str:
+    """Extrai o tenant_id da requisição via header, query param ou subdomain"""
+    
+    # 1. Tentar via header X-Tenant-ID
+    tenant_id = request.headers.get('X-Tenant-ID')
+    if tenant_id:
+        print(f"✅ Tenant ID encontrado via header: {tenant_id}")
+        return tenant_id
+    
+    # 2. Tentar via query parameter
+    tenant_id = request.args.get('tenant_id')
+    if tenant_id:
+        print(f"✅ Tenant ID encontrado via query param: {tenant_id}")
+        return tenant_id
+    
+    # 3. Tentar via subdomain (ex: tenant1.seudominio.com)
+    host = request.headers.get('Host', '')
+    if '.' in host:
+        subdomain = host.split('.')[0]
+        if subdomain not in ['www', 'api', 'app']:
+            print(f"✅ Tenant ID encontrado via subdomain: {subdomain}")
+            return subdomain
+    
+    # 4. Usar tenant padrão
+    default_tenant = "00000000-0000-0000-0000-000000000000"
+    print(f"⚠️ Usando tenant padrão: {default_tenant}")
+    return default_tenant
+
 @functions_framework.http
 def message_receiver(request):
     """Função router que recebe webhooks de diferentes CRMs e padroniza as mensagens."""
+    
+    # Detectar tenant_id
+    tenant_id = get_tenant_id_from_request(request)
     
     webhook = WebhookProcessor(request)
     
@@ -35,19 +66,23 @@ def message_receiver(request):
 
     # Converte o webhook para a mensagem padronizada
     incomming_message = webhook.message
-    print(incomming_message)
+    
+    # Adicionar tenant_id à mensagem
+    incomming_message.tenant_id = tenant_id
+    
+    print(f"📨 Mensagem recebida para tenant {tenant_id}: {incomming_message}")
 
-    # Carrega o Supabase
-    supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'))
+    # Carrega o Supabase com tenant_id
+    supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'), tenant_id)
     
     # Salva a mensagem sem conversation_id (será definido pelo message_buffer)
     supabase.save_message(incomming_message)
 
     # Agendar task para processamento com buffer de 6 segundos
     # Usuário será criado/buscado no message_buffer
-    return schedule_processing_task(incomming_message.sender)
+    return schedule_processing_task(incomming_message.sender, tenant_id)
 
-def schedule_processing_task(identification: str):
+def schedule_processing_task(identification: str, tenant_id: str):
     """Agenda uma task para processamento com buffer de 6 segundos"""
     
     try:
@@ -69,10 +104,13 @@ def schedule_processing_task(identification: str):
         queue_path = client.queue_path(project_id, location_id, queue_id)
         
         # Cancelar task existente para este usuário (se houver)
-        cancel_existing_task(client, queue_path, identification)
+        cancel_existing_task(client, queue_path, identification, tenant_id)
         
         # Criar payload da task
-        task_payload = { "identification": identification }
+        task_payload = { 
+            "identification": identification,
+            "tenant_id": tenant_id
+        }
         
         # Configurar task
         task = {
@@ -88,7 +126,7 @@ def schedule_processing_task(identification: str):
         # Criar task
         response = client.create_task(request={"parent": queue_path, "task": task})
         
-        print(f"✅ Task agendada para identificação {identification}: {response.name}")
+        print(f"✅ Task agendada para identificação {identification} (tenant: {tenant_id}): {response.name}")
         
         # Retornar resposta de sucesso
         response_data = { 
@@ -96,6 +134,7 @@ def schedule_processing_task(identification: str):
             "message": "Webhook processado e task agendada com sucesso",
             "task_id": response.name,
             "identification": identification,
+            "tenant_id": tenant_id,
             "scheduled_time": datetime.now().isoformat()
         }
         return jsonify(response_data), 200
@@ -104,7 +143,7 @@ def schedule_processing_task(identification: str):
         print(f"❌ Erro ao agendar task: {str(e)}")
         return jsonify({"error": f"Erro ao agendar task: {str(e)}"}), 500
 
-def cancel_existing_task(client, queue_path: str, identification: str):
+def cancel_existing_task(client, queue_path: str, identification: str, tenant_id: str):
     """Cancela task existente para a identificação"""
     
     try:
@@ -113,14 +152,15 @@ def cancel_existing_task(client, queue_path: str, identification: str):
         page_result = client.list_tasks(request=request)
         
         for task in page_result:
-            # Verificar se a task é para a mesma identificação
+            # Verificar se a task é para a mesma identificação e tenant
             if task.http_request.body:
                 try:
                     task_data = json.loads(task.http_request.body.decode())
-                    if task_data.get("identification") == identification:
+                    if (task_data.get("identification") == identification and 
+                        task_data.get("tenant_id") == tenant_id):
                         # Cancelar task existente
                         client.delete_task(name=task.name)
-                        print(f"🔄 Task cancelada para identificação {identification}: {task.name}")
+                        print(f"🔄 Task cancelada para identificação {identification} (tenant: {tenant_id}): {task.name}")
                         break
                 except:
                     continue

@@ -8,3 +8,4 @@ qdrant_data/
 redis_data/
 *credential.json
 service-account.json
+/scripts/
