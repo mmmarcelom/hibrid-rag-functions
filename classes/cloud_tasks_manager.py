@@ -80,13 +80,13 @@ class CloudTasksManager:
             }
             
             # Obter URL do Message Buffer
-            message_buffer_url = os.getenv('MESSAGE_PROCESSOR_URL')
+            message_processor_url = os.getenv('MESSAGE_PROCESSOR_URL')
             
             # Criar a tarefa
             task = {
                 'http_request': {
                     'http_method': tasks_v2.HttpMethod.POST,
-                    'url': message_buffer_url,
+                    'url': message_processor_url,
                     'headers': {
                         'Content-Type': 'application/json',
                         'X-Tenant-ID': tenant_id

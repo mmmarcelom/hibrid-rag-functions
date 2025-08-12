@@ -25,7 +25,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copiar código da função
 COPY message_processor_*.py ./
 COPY classes/ ./classes/
-COPY service-account.json ./
 
 # Verificar se message_processor_main.py existe
 RUN test -f message_processor_main.py || (echo "message_processor_main.py não encontrado!" && exit 1)

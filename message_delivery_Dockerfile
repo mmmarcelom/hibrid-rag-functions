@@ -25,7 +25,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copiar código da função
 COPY message_delivery_*.py ./
 COPY classes/ ./classes/
-COPY service-account.json ./
 
 # Verificar se message_delivery_main.py existe
 RUN test -f message_delivery_main.py || (echo "message_delivery_main.py não encontrado!" && exit 1)

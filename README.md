@@ -164,6 +164,43 @@ Se um tópico específico do cliente não existir, o sistema usa automaticamente
 - `default-processamento` para processamento
 - `default-envio` para envio
 
+### 🚀 Cloud Tasks Queues por Cliente e Plataforma
+
+Cada cliente usa **um CRM** (wts, kommo, rd_station), mas pode usar **múltiplas plataformas** (whatsapp, instagram, messenger). As queues são nomeadas como:
+
+```
+{slug_cliente}-{platform}
+```
+
+#### 📋 Exemplos:
+
+| Cliente | CRM | Plataformas | Queues |
+|---------|-----|-------------|--------|
+| hubnordeste | wts | whatsapp, instagram | `hubnordeste-whatsapp`, `hubnordeste-instagram` |
+| cliente2 | kommo | whatsapp, messenger | `cliente2-whatsapp`, `cliente2-messenger` |
+| default | - | whatsapp | `default-whatsapp` |
+
+#### 🔧 Comandos para criar queues:
+
+```bash
+# Hub Nordeste (usando WTS CRM)
+gcloud tasks queues create hubnordeste-whatsapp --location=southamerica-east1 --project=hibrid-rag
+gcloud tasks queues create hubnordeste-instagram --location=southamerica-east1 --project=hibrid-rag
+gcloud tasks queues create hubnordeste-messenger --location=southamerica-east1 --project=hibrid-rag
+
+# Default (fallback)
+gcloud tasks queues create default-whatsapp --location=southamerica-east1 --project=hibrid-rag
+gcloud tasks queues create default-instagram --location=southamerica-east1 --project=hibrid-rag
+gcloud tasks queues create default-messenger --location=southamerica-east1 --project=hibrid-rag
+```
+
+#### 🎯 Lógica de funcionamento:
+
+1. **CRM único por cliente**: Cada cliente usa apenas um CRM (wts, kommo, rd_station)
+2. **Múltiplas plataformas**: O mesmo cliente pode ter conversas em whatsapp, instagram, messenger
+3. **Queues por plataforma**: Cada plataforma tem sua própria queue para isolamento
+4. **Processamento unificado**: Todas as mensagens do cliente vão para o mesmo tópico Pub/Sub
+
 ### 📁 Estrutura de Arquivos
 
 ```
