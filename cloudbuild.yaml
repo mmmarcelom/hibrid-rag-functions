@@ -62,6 +62,11 @@ steps:
       - '--set-env-vars'
       - 'SUPABASE_URL=${_SUPABASE_URL},SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY},GOOGLE_PROJECT_ID=$PROJECT_ID'
 
+# Configurações de logs e opções
+options:
+  logging: CLOUD_LOGGING_ONLY
+  defaultLogsBucket: gs://$PROJECT_ID-cloudbuild-logs
+
 # Substituições (serão configuradas no Cloud Build)
 substitutions:
   _SUPABASE_URL: 'https://your-project.supabase.co'
