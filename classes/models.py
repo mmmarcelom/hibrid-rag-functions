@@ -8,27 +8,28 @@ class Message(BaseModel):
     """Mensagem padronizada para todos os webhooks e sistemas."""
     id: str
     tenant_id: str  # OBRIGATÓRIO - ID do tenant
-    conversation_id: Optional[str] = None  # Será definido pelo message_buffer
-    platform: str
+    conversation_id: Optional[str] = None  # Será definido pelo message_processor
+    platform: Literal['whatsapp', 'instagram', 'messenger']
     sender: str
     sender_name: Optional[str] = None
     receiver: str
     content: str
     direction: Literal['incoming', 'outgoing']
     message_type: Literal['text', 'audio', 'video', 'image', 'document']
-    timestamp: Optional[str] = None
+    timestamp: Optional[datetime] = None
     metadata: Optional[Dict[str, Any]] = None
-    crm_source: Optional[str] = None  # Identifica qual CRM enviou (wts, kommo, rd, etc)
+    crm_source: Literal['wts', 'kommo', 'rd_station']
     
     class Config:
-        extra = "ignore" 
+        extra = "ignore"
 
 class Conversation(BaseModel):
     """Estrutura para conversas no Supabase."""
     id: str
     tenant_id: str  # OBRIGATÓRIO - ID do tenant
     identification: str
-    platform: Literal['wts', 'kommo', 'rd_conversas']
+    platform: Literal['whatsapp', 'instagram', 'messenger']
+    crm_source: Literal['wts', 'kommo', 'rd_station']
     created_at: str
     updated_at: str
     ia_active: Optional[bool] = True

@@ -7,7 +7,7 @@ Sistema de processamento de mensagens com RAG (Retrieval-Augmented Generation) p
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   CRMs (WTS,    │    │  Message        │    │  Message        │
-│   Kommo, RD)    │───▶│  Receiver       │───▶│  Buffer         │
+│   Kommo, RD)    │───▶│  Buffer         │───▶│  Processor      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │                        │
                               ▼                        ▼
@@ -56,7 +56,7 @@ _SUPABASE_URL: https://your-project.supabase.co
 _SUPABASE_ANON_KEY: your-supabase-anon-key
 _CLOUD_TASKS_QUEUE_ID: message-processing-queue
 _CLOUD_TASKS_LOCATION: southamerica-east1
-_MESSAGE_BUFFER_URL: https://message-buffer-xxxxx-sae1.a.run.app
+_MESSAGE_PROCESSOR_URL: https://message-processor-xxxxx-sae1.a.run.app
 _PUBSUB_TOPIC_TO_PROCESS: para-processamento
 ```
 
@@ -94,11 +94,11 @@ Configure o Cloud Run para usar o Service Account:
 
 ```bash
 # Configurar Cloud Run para usar o Service Account
-gcloud run services update message-receiver \
+gcloud run services update message-buffer \
     --service-account=hibrid-rag-sa@$PROJECT_ID.iam.gserviceaccount.com \
     --region=southamerica-east1
 
-gcloud run services update message-buffer \
+gcloud run services update message-processor \
     --service-account=hibrid-rag-sa@$PROJECT_ID.iam.gserviceaccount.com \
     --region=southamerica-east1
 
@@ -116,12 +116,60 @@ Após configurar o trigger, cada push para a branch principal irá:
 3. **Configuração** das variáveis de ambiente
 4. **Atualização** das URLs de comunicação
 
-## 📁 Estrutura do Projeto
+## 📋 Estrutura do Projeto
+
+### 🏗️ Arquitetura Multi-Tenant
+
+O projeto segue uma arquitetura multi-tenant onde cada cliente (tenant) tem:
+
+- **Dados isolados** no Supabase com Row Level Security (RLS)
+- **Configurações específicas** por tenant
+- **Tópicos Pub/Sub específicos** por cliente
+- **Cloud Tasks isoladas** por tenant
+
+### 📡 Tópicos Pub/Sub por Cliente
+
+O sistema usa tópicos específicos por cliente seguindo o formato:
+
+```
+{nome_cliente}-processamento  # Para processamento de mensagens
+{nome_cliente}-envio          # Para envio de mensagens
+```
+
+#### 📋 Exemplos:
+
+| Cliente | Processamento | Envio |
+|---------|---------------|-------|
+| hubnordeste | `hubnordeste-processamento` | `hubnordeste-envio` |
+| cliente2 | `cliente2-processamento` | `cliente2-envio` |
+| default | `default-processamento` | `default-envio` |
+
+#### ⚠️ Tópicos Obrigatórios:
+
+Os tópicos padrão são **OBRIGATÓRIOS** e devem ser criados primeiro:
+
+```bash
+# Tópicos padrão (obrigatórios)
+gcloud pubsub topics create default-processamento --project=SEU_PROJETO_ID
+gcloud pubsub topics create default-envio --project=SEU_PROJETO_ID
+
+# Tópicos específicos por cliente (opcionais)
+gcloud pubsub topics create hubnordeste-processamento --project=SEU_PROJETO_ID
+gcloud pubsub topics create hubnordeste-envio --project=SEU_PROJETO_ID
+```
+
+#### 🔄 Fallback:
+
+Se um tópico específico do cliente não existir, o sistema usa automaticamente:
+- `default-processamento` para processamento
+- `default-envio` para envio
+
+### 📁 Estrutura de Arquivos
 
 ```
 hibrid-rag-functions/
-├── 📄 message_receiver_main.py      # Recebe webhooks dos CRMs
-├── 📄 message_buffer_main.py        # Processa buffer e publica no Pub/Sub
+├── 📄 message_buffer_main.py        # Recebe webhooks dos CRMs
+├── 📄 message_processor_main.py     # Processa mensagens e publica no Pub/Sub
 ├── 📄 message_delivery_main.py      # Envia mensagens para os CRMs
 ├── 📄 models.py                     # Modelos Pydantic (multi-tenant)
 ├── 📄 supabase.py                   # Gerenciador do Supabase (multi-tenant)
@@ -132,8 +180,8 @@ hibrid-rag-functions/
 ├── 📄 .gcloudignore                 # Arquivos ignorados pelo Cloud Build
 ├── 📄 cloudbuild.yaml               # Configuração do Cloud Build
 ├── 📄 README.md                     # Documentação principal
-├── 📁 message_receiver_Dockerfile   # Dockerfile para message-receiver
 ├── 📁 message_buffer_Dockerfile     # Dockerfile para message-buffer
+├── 📁 message_processor_Dockerfile  # Dockerfile para message-processor
 ├── 📁 message_delivery_Dockerfile   # Dockerfile para message-delivery
 ├── 📁 setup/                        # Scripts de setup do banco de dados
 └── 📁 scripts/                      # Scripts e documentação auxiliar
@@ -178,7 +226,7 @@ O sistema detecta automaticamente o tenant via:
 
 ```bash
 # Webhook para Hub Nordeste
-curl -X POST https://message-receiver-xxxxx-sae1.a.run.app \
+curl -X POST https://message-buffer-xxxxx-sae1.a.run.app \
   -H "X-Tenant-ID: hubnordeste-uuid" \
   -H "Content-Type: application/json" \
   -d '{"webhook": "data"}'
@@ -261,11 +309,11 @@ cp env.example .env
 ### 2. Executar Localmente
 
 ```bash
-# Message Receiver
-functions-framework --target=message_receiver --port=8080
-
 # Message Buffer
-functions-framework --target=message_buffer --port=8081
+functions-framework --target=message_buffer --port=8080
+
+# Message Processor
+functions-framework --target=message_processor --port=8081
 
 # Message Delivery
 functions-framework --target=message_delivery --port=8082

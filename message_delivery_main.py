@@ -5,10 +5,10 @@ import json
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-from models import Publication, Message, Conversation
 
-from supabase_manager import SupabaseManager
-from message_processor import DeliveryProcessor
+from classes.models import Message, Conversation, Publication
+from classes.delivery_processor import DeliveryProcessor
+from classes.supabase_manager import SupabaseManager
 
 @functions_framework.http
 def message_delivery(request):

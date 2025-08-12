@@ -24,9 +24,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copiar código da função
 COPY message_buffer_*.py ./
-COPY models.py ./
-COPY supabase_manager.py ./
-COPY message_processor.py ./
+COPY classes/ ./classes/
+COPY service-account.json ./
 
 # Verificar se message_buffer_main.py existe
 RUN test -f message_buffer_main.py || (echo "message_buffer_main.py não encontrado!" && exit 1)

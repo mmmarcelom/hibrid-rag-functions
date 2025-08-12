@@ -1,0 +1,47 @@
+{
+    "responseKeys": [],
+    "sessionId": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+    "session": {
+        "id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+        "createdAt": "2025-08-06T23:04:49.798046Z",
+        "departmentId": "657716fb-9539-4e37-b261-b9e828229069",
+        "userId": "f192d6d8-13ac-4385-8c0f-78dfb0cb0db5",
+        "number": "2025080600001",
+        "utm": null
+    },
+    "channel": {
+        "id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+        "key": "5582999939356",
+        "platform": "WhatsApp",
+        "displayName": "Instância 432129"
+    },
+    "contact": {
+        "id": "8ccc59ae-949e-43b7-83df-54f56f77c3ba",
+        "name": "Marcelo",
+        "first-name": "Marcelo",
+        "phonenumber": "+55|82996688666",
+        "display-phonenumber": "(82) 99668-8666",
+        "email": "mm.marcelomesquita@gmail.com",
+        "instagram": null,
+        "tags": null,
+        "annotation": "",
+        "metadata": {}
+    },
+    "questions": {},
+    "menus": {},
+    "templates": {},
+    "metadata": {},
+    "lastContactMessage": "Meu nome é Marcelo Mesquita, tudo bom?",
+    "lastMessage": {
+        "id": "b6f71c23-92f9-49bd-9c2e-06059de9f095",
+        "createdAt": "2025-08-12T18:37:57.034Z",
+        "type": "TEXT",
+        "text": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "fileId": null,
+        "file": null
+    },
+    "lastMessagesAggregated": {
+        "text": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "files": []
+    }
+}

@@ -9,3 +9,4 @@ redis_data/
 *credential.json
 service-account.json
 /scripts/
+*.ipynb

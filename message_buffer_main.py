@@ -1,108 +1,92 @@
 import functions_framework
 from flask import request, jsonify
 import os
-import json
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 load_dotenv()
-from models import Publication, Message, Conversation
 
-from supabase_manager import SupabaseManager
+from classes.models import Message
+from classes.webhook_processor import WebhookProcessor
+from classes.supabase_manager import SupabaseManager
+from classes.cloud_tasks_manager import CloudTasksManager
+
+def get_tenant_info_from_request(request) -> tuple[str, str]:
+    """Extrai e valida o tenant_id e retorna o slug do tenant."""
+    # Verificar se tenant_id está presente
+    tenant_id = request.args.get('tenant_id')
+    if not tenant_id:
+        raise ValueError("tenant_id é obrigatório na URL")
+    
+    # Verificar se é um UUID válido
+    try:
+        uuid.UUID(str(tenant_id))
+    except ValueError:
+        raise ValueError(f"tenant_id deve ser um UUID válido: {tenant_id}")
+    
+    # Buscar slug do tenant no banco
+    try:
+        supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'))
+        slug = supabase.get_tenant_name(tenant_id)
+        return tenant_id, slug
+    except Exception as e:
+        raise ValueError(f"Erro ao buscar informações do tenant: {str(e)}")
+
+# ----------------------------------------------------------------------------------------
+#                                  MAIN FUNCTION
+# ----------------------------------------------------------------------------------------
 
 @functions_framework.http
 def message_buffer(request):
-    """Função que processa mensagens em buffer e publica no Pub/Sub."""
-    
-    # Retorna erro para métodos diferentes de POST
-    if request.method != 'POST':
-        return jsonify({"error": f"Método {request.method} não é suportado"}), 405
-    
-    try:        
-        # Obter dados da task
-        task_data = request.get_json()
-        if not task_data:
-            return jsonify({"error": "Dados da task não fornecidos"}), 400
-        
-        identification = task_data.get("identification")
-        tenant_id = task_data.get("tenant_id")
-        
-        if not identification:
-            return jsonify({"error": "identification é obrigatório"}), 400
-        
-        if not tenant_id:
-            return jsonify({"error": "tenant_id é obrigatório"}), 400
-        
-        print(f"🔄 Processando task para identificação: {identification} (tenant: {tenant_id})")
-        
-        # Conectar ao Supabase com tenant_id
-        supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'), tenant_id)
-        
-        # Processar conversa para publicação
-        try:
-            # Usar método encapsulado da SupabaseManager
-            conversation, buffer_messages, conversation_history = supabase.process_conversation_for_publication(identification, tenant_id)
-            
-            # Criar publication com nova estrutura
-            publication = Publication(
-                tenant_id=tenant_id,
-                conversation=conversation, 
-                buffer_messages=buffer_messages,
-                conversation_history=conversation_history
-            )
-            
-            # Publicar no Pub/Sub
-            return publish_message(publication)
-            
-        except ValueError as e:
-            print(f"❌ Erro de validação: {e}")
-            return jsonify({"error": str(e)}), 404
-        except Exception as e:
-            print(f"❌ Erro ao processar conversa: {e}")
-            return jsonify({"error": f"Erro ao processar conversa: {str(e)}"}), 500
-            
-    except Exception as e:
-        print(f"❌ Erro geral no message buffer: {e}")
-        return jsonify({"error": f"Erro interno: {str(e)}"}), 500
-
-def publish_message(publication: Publication):
-    """Envia publication com mensagem e contexto para o Pub/Sub"""
-    
+    """Função que recebe webhooks dos CRMs e processa as mensagens."""
+    # Extrair e validar tenant_id e obter slug da URL
     try:
-        from google.cloud import pubsub_v1
-        
-        # Cloud Run gerencia credenciais automaticamente
-        publisher = pubsub_v1.PublisherClient()
-        print("✅ Publisher client inicializado com credenciais padrão do Cloud Run")
-        
-        topic_path = publisher.topic_path(os.getenv('GOOGLE_PROJECT_ID'), os.getenv('PUBSUB_TOPIC_TO_PROCESS'))
-        
-        # Preparar dados da publication
-        publication_data = {
-            "tenant_id": publication.tenant_id,
-            "conversation": publication.conversation.model_dump(),
-            "buffer_messages": [msg.model_dump() for msg in publication.buffer_messages] if publication.buffer_messages else [],
-            "conversation_history": [msg.model_dump() for msg in publication.conversation_history] if publication.conversation_history else [],
-            "timestamp": datetime.now().isoformat(),
-            "publication_id": f"task_pub_{int(datetime.now().timestamp())}"
-        }
-        
-        # Publicar no Pub/Sub
-        publisher.publish(topic_path, json.dumps(publication_data).encode())
-        print(f"✅ Publication enviada para Pub/Sub: {publication_data['publication_id']}")
-
-        # Retornar resposta de sucesso
-        return jsonify({
-            "status": "success",
-            "message": "Task processada e publicação enviada com sucesso",
-            "publication_id": publication_data['publication_id'],
-            "tenant_id": publication.tenant_id,
-            "conversation_id": publication.conversation.id,
-            "buffer_messages_count": len(publication.buffer_messages) if publication.buffer_messages else 0,
-            "conversation_history_count": len(publication.conversation_history) if publication.conversation_history else 0
-        }), 200
-        
+        tenant_id, slug = get_tenant_info_from_request(request)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    
+    # TODO: Reativar validação quando RLS estiver configurado corretamente
+    # # Verificar se tenant existe no banco
+    # supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'))
+    # try:
+    #     if not supabase.tenant_exists(tenant_id):
+    #         return jsonify({"error": f"tenant_id não encontrado no banco de dados: {tenant_id}"}), 400
+    # except Exception as e:
+    #     return jsonify({"error": f"Erro ao verificar tenant_id no banco: {str(e)}"}), 500
+    
+    # Processar webhook
+    webhook = WebhookProcessor(request, tenant_id)
+    
+    if webhook.error:
+        return jsonify({"error": webhook.error}), 400
+    
+    if not webhook.message:
+        return jsonify({"error": "Nenhuma mensagem válida encontrada no webhook"}), 400
+    
+    print(f"📨 Mensagem recebida: {webhook.message.id} | Tenant: {tenant_id}")
+    
+    # Salvar mensagem no Supabase (usando a mesma instância)
+    try:
+        # TODO: Se RLS estiver ativo, usar SUPABASE_SERVICE_ROLE_KEY em vez de SUPABASE_ANON_KEY
+        supabase = SupabaseManager(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_ANON_KEY'))
+        supabase.save_message(webhook.message)
     except Exception as e:
-        print(f"❌ Erro ao enviar publication para Pub/Sub: {str(e)}")
-        return jsonify({
-            "error": f"Erro ao publicar mensagem: {str(e)}"
-        }), 500 
+        print(f"❌ Erro ao salvar mensagem: {e}")
+        return jsonify({"error": f"Erro ao salvar mensagem: {str(e)}"}), 500
+    
+    # Cancelar task anterior e agendar nova task
+    try:
+        cloud_tasks = CloudTasksManager()
+        cloud_tasks.cancel_existing_task(webhook.message.id, tenant_id, slug, webhook.message.platform)
+        task_name = cloud_tasks.schedule_task(webhook.message.id, tenant_id, slug, webhook.message.platform)
+        print(f"✅ Task agendada: {task_name}")
+    except Exception as e:
+        print(f"❌ Erro ao agendar processamento: {e}")
+        return jsonify({"error": f"Erro ao agendar processamento: {str(e)}"}), 500
+    
+    return jsonify({
+        "status": "success",
+        "message": "Mensagem recebida e processada com sucesso",
+        "tenant_id": tenant_id,
+        "message_id": webhook.message.id
+    }), 200
