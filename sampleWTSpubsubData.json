@@ -1,0 +1,159 @@
+[
+  {
+    "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+    "conversation": {
+      "id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+      "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+      "identification": "82996688666",
+      "platform": "whatsapp",
+      "crm_source": "wts",
+      "created_at": "2025-08-13T00:17:53.151049+00:00",
+      "updated_at": "2025-08-13T00:17:53.151082+00:00",
+      "ia_active": true
+    },
+    "buffer_messages": [
+      {
+        "id": "e1a62306-8b81-4d6b-922f-32b49db699c9",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:24:14.177429+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      }
+    ],
+    "conversation_history": [
+      {
+        "id": "8645fc7c-0720-4c22-82ed-3fabdd6fdc98",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:17:52.042950+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      },
+      {
+        "id": "d71062fd-5a01-48c6-abb8-a028fbf91791",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:20:30.220813+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      },
+      {
+        "id": "b19b75ba-2194-4a60-9065-d3337650263e",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:21:07.639652+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      },
+      {
+        "id": "d9688564-02a7-477a-a500-e242c333bc26",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:21:36.275545+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      },
+      {
+        "id": "e1a62306-8b81-4d6b-922f-32b49db699c9",
+        "tenant_id": "31d34af8-5324-4579-9661-4eb132a2de55",
+        "conversation_id": "74f644e7-cd24-4d6c-b315-ec105cd01a75",
+        "platform": "whatsapp",
+        "sender": "82996688666",
+        "sender_name": "Marcelo",
+        "receiver": "5582999939356",
+        "content": "Meu nome é Marcelo Mesquita, tudo bom?",
+        "direction": "incoming",
+        "message_type": "text",
+        "timestamp": "2025-08-12T18:37:57.034000+00:00",
+        "metadata": {
+          "crm": "wts",
+          "channel_id": "f85f93f1-c58a-4f88-a5d2-d4551ab9f07d",
+          "session_id": "7bad8897-ede3-4edc-b669-58238a1c43a2",
+          "contact_name": "Marcelo",
+          "message_type": "TEXT",
+          "processed_at": "2025-08-13T00:24:14.177429+00:00",
+          "original_message_id": "b6f71c23-92f9-49bd-9c2e-06059de9f095"
+        },
+        "crm_source": "wts"
+      }
+    ],
+    "timestamp": "2025-08-13T00:24:18.253262+00:00",
+    "publication_id": "pub_1755044658"
+  }
+]

@@ -62,9 +62,9 @@ class PubSubManager:
             # Preparar dados da publication
             publication_data = {
                 "tenant_id": publication.tenant_id,
-                "conversation": publication.conversation.model_dump(),
-                "buffer_messages": [msg.model_dump() for msg in publication.buffer_messages] if publication.buffer_messages else [],
-                "conversation_history": [msg.model_dump() for msg in publication.conversation_history] if publication.conversation_history else [],
+                "conversation": publication.conversation.model_dump(mode='json'),
+                "buffer_messages": [msg.model_dump(mode='json') for msg in publication.buffer_messages] if publication.buffer_messages else [],
+                "conversation_history": [msg.model_dump(mode='json') for msg in publication.conversation_history] if publication.conversation_history else [],
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "publication_id": f"pub_{int(datetime.now().timestamp())}"
             }

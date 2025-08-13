@@ -22,6 +22,9 @@ class Message(BaseModel):
     
     class Config:
         extra = "ignore"
+        json_encoders = {
+            datetime: lambda v: v.isoformat() if v else None
+        }
 
 class Conversation(BaseModel):
     """Estrutura para conversas no Supabase."""
